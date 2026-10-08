@@ -362,6 +362,10 @@ export default function OrdersPage() {
                       order.id
                     )}`}
                     className="bg-black px-5 py-3 text-xs font-medium tracking-wider text-white"
+                    style={{
+                      backgroundColor: "#111111",
+                      color: "#ffffff",
+                    }}
                   >
                     VIEW ORDER
                   </Link>

@@ -91,6 +91,10 @@ export default function ProductManagePage() {
     params.id as string;
 
 
+  // ============================================
+  // DATA
+  // ============================================
+
   const [product, setProduct] =
     useState<Product | null>(null);
 
@@ -106,23 +110,21 @@ export default function ProductManagePage() {
   const [
     optionsByVariation,
     setOptionsByVariation,
-  ] =
-    useState<
-      Record<string, VariationOption[]>
-    >({});
+  ] = useState<
+    Record<string, VariationOption[]>
+  >({});
 
   const [
     configurationsByItem,
     setConfigurationsByItem,
-  ] =
-    useState<
-      Record<string, ProductConfiguration[]>
-    >({});
+  ] = useState<
+    Record<string, ProductConfiguration[]>
+  >({});
 
 
-  // --------------------------------------------
+  // ============================================
   // NEW VARIANT FORM
-  // --------------------------------------------
+  // ============================================
 
   const [sku, setSku] =
     useState("");
@@ -136,13 +138,31 @@ export default function ProductManagePage() {
   const [
     selectedOptions,
     setSelectedOptions,
-  ] =
-    useState<Record<string, string>>({});
+  ] = useState<Record<string, string>>(
+    {}
+  );
 
 
-  // --------------------------------------------
+  // ============================================
+  // STOCK EDITING
+  // ============================================
+
+  const [
+    stockEdits,
+    setStockEdits,
+  ] = useState<Record<string, string>>(
+    {}
+  );
+
+  const [
+    savingStock,
+    setSavingStock,
+  ] = useState<string | null>(null);
+
+
+  // ============================================
   // IMAGE FORM
-  // --------------------------------------------
+  // ============================================
 
   const [imageFile, setImageFile] =
     useState<File | null>(null);
@@ -150,25 +170,28 @@ export default function ProductManagePage() {
   const [imageAlt, setImageAlt] =
     useState("");
 
-  const [imagePrimary, setImagePrimary] =
-    useState(false);
+  const [
+    imagePrimary,
+    setImagePrimary,
+  ] = useState(false);
 
 
-  // --------------------------------------------
+  // ============================================
   // PAGE STATE
-  // --------------------------------------------
+  // ============================================
 
   const [loading, setLoading] =
     useState(true);
 
-  const [savingVariant, setSavingVariant] =
-    useState(false);
+  const [
+    savingVariant,
+    setSavingVariant,
+  ] = useState(false);
 
   const [
     uploadingImage,
     setUploadingImage,
-  ] =
-    useState(false);
+  ] = useState(false);
 
   const [error, setError] =
     useState("");
@@ -177,9 +200,9 @@ export default function ProductManagePage() {
     useState("");
 
 
-  // --------------------------------------------
+  // ============================================
   // AUTH
-  // --------------------------------------------
+  // ============================================
 
   function getToken() {
     return sessionStorage.getItem(
@@ -198,7 +221,6 @@ export default function ProductManagePage() {
       router.push("/login");
       return null;
     }
-
 
     const response =
       await fetch(
@@ -241,10 +263,8 @@ export default function ProductManagePage() {
       return false;
     }
 
-
     const data =
       await response.json();
-
 
     if (
       !response.ok ||
@@ -254,14 +274,13 @@ export default function ProductManagePage() {
       return false;
     }
 
-
     return true;
   }
 
 
-  // --------------------------------------------
+  // ============================================
   // LOAD PRODUCT
-  // --------------------------------------------
+  // ============================================
 
   async function loadProduct() {
     const response =
@@ -272,10 +291,8 @@ export default function ProductManagePage() {
         }
       );
 
-
     const data =
       await response.json();
-
 
     if (!response.ok) {
       throw new Error(
@@ -284,14 +301,13 @@ export default function ProductManagePage() {
       );
     }
 
-
     setProduct(data);
   }
 
 
-  // --------------------------------------------
+  // ============================================
   // LOAD PRODUCT ITEMS
-  // --------------------------------------------
+  // ============================================
 
   async function loadItems() {
     const response =
@@ -302,10 +318,8 @@ export default function ProductManagePage() {
         }
       );
 
-
     const data =
       await response.json();
-
 
     if (!response.ok) {
       throw new Error(
@@ -314,16 +328,15 @@ export default function ProductManagePage() {
       );
     }
 
-
     setItems(data);
 
     return data as ProductItem[];
   }
 
 
-  // --------------------------------------------
+  // ============================================
   // LOAD IMAGES
-  // --------------------------------------------
+  // ============================================
 
   async function loadImages() {
     const response =
@@ -334,10 +347,8 @@ export default function ProductManagePage() {
         }
       );
 
-
     const data =
       await response.json();
-
 
     if (!response.ok) {
       throw new Error(
@@ -346,14 +357,13 @@ export default function ProductManagePage() {
       );
     }
 
-
     setImages(data);
   }
 
 
-  // --------------------------------------------
-  // LOAD VARIATIONS + OPTIONS
-  // --------------------------------------------
+  // ============================================
+  // LOAD VARIATIONS
+  // ============================================
 
   async function loadVariations() {
     const response =
@@ -364,10 +374,8 @@ export default function ProductManagePage() {
         }
       );
 
-
     const data =
       await response.json();
-
 
     if (!response.ok) {
       throw new Error(
@@ -376,19 +384,18 @@ export default function ProductManagePage() {
       );
     }
 
-
     const variationList =
       data as Variation[];
 
-
-    setVariations(variationList);
+    setVariations(
+      variationList
+    );
 
 
     const optionEntries =
       await Promise.all(
         variationList.map(
           async (variation) => {
-
             const optionResponse =
               await fetch(
                 `${API_URL}/variations/${variation.id}/options`,
@@ -397,10 +404,8 @@ export default function ProductManagePage() {
                 }
               );
 
-
             const optionData =
               await optionResponse.json();
-
 
             if (!optionResponse.ok) {
               throw new Error(
@@ -408,7 +413,6 @@ export default function ProductManagePage() {
                   `Unable to load ${variation.name} options`
               );
             }
-
 
             return [
               variation.id,
@@ -427,9 +431,9 @@ export default function ProductManagePage() {
   }
 
 
-  // --------------------------------------------
-  // LOAD ITEM CONFIGURATIONS
-  // --------------------------------------------
+  // ============================================
+  // LOAD CONFIGURATIONS
+  // ============================================
 
   async function loadConfigurations(
     productItems: ProductItem[]
@@ -438,7 +442,6 @@ export default function ProductManagePage() {
       await Promise.all(
         productItems.map(
           async (item) => {
-
             const response =
               await fetch(
                 `${API_URL}/product-items/${item.id}/configurations`,
@@ -447,10 +450,8 @@ export default function ProductManagePage() {
                 }
               );
 
-
             const data =
               await response.json();
-
 
             if (!response.ok) {
               throw new Error(
@@ -458,7 +459,6 @@ export default function ProductManagePage() {
                   `Unable to load configuration for ${item.sku}`
               );
             }
-
 
             return [
               item.id,
@@ -477,10 +477,6 @@ export default function ProductManagePage() {
   }
 
 
-  // --------------------------------------------
-  // RELOAD SKU DATA
-  // --------------------------------------------
-
   async function reloadItems() {
     const currentItems =
       await loadItems();
@@ -491,20 +487,18 @@ export default function ProductManagePage() {
   }
 
 
-  // --------------------------------------------
+  // ============================================
   // INITIAL LOAD
-  // --------------------------------------------
+  // ============================================
 
   useEffect(() => {
     async function loadPage() {
       setLoading(true);
       setError("");
 
-
       try {
         const admin =
           await checkAdmin();
-
 
         if (!admin) {
           return;
@@ -551,13 +545,12 @@ export default function ProductManagePage() {
   }, [productId]);
 
 
-  // --------------------------------------------
+  // ============================================
   // OPTION LOOKUP
-  // --------------------------------------------
+  // ============================================
 
   const optionLookup =
     useMemo(() => {
-
       const lookup =
         new Map<
           string,
@@ -568,16 +561,20 @@ export default function ProductManagePage() {
         >();
 
 
-      for (const variation of variations) {
-
+      for (
+        const variation
+        of variations
+      ) {
         const options =
           optionsByVariation[
             variation.id
           ] ?? [];
 
 
-        for (const option of options) {
-
+        for (
+          const option
+          of options
+        ) {
           lookup.set(
             option.id,
             {
@@ -585,7 +582,6 @@ export default function ProductManagePage() {
               variation,
             }
           );
-
         }
       }
 
@@ -598,9 +594,9 @@ export default function ProductManagePage() {
     ]);
 
 
-  // --------------------------------------------
-  // SELECT VARIATION OPTION
-  // --------------------------------------------
+  // ============================================
+  // SELECT OPTION
+  // ============================================
 
   function selectOption(
     variationId: string,
@@ -627,16 +623,17 @@ export default function ProductManagePage() {
 
         return {
           ...current,
-          [variationId]: optionId,
+          [variationId]:
+            optionId,
         };
       }
     );
   }
 
 
-  // --------------------------------------------
+  // ============================================
   // CREATE VARIANT
-  // --------------------------------------------
+  // ============================================
 
   async function handleCreateVariant(
     event: FormEvent<HTMLFormElement>
@@ -696,7 +693,8 @@ export default function ProductManagePage() {
             },
 
             body: JSON.stringify({
-              product_id: productId,
+              product_id:
+                productId,
 
               variants: [
                 {
@@ -768,9 +766,139 @@ export default function ProductManagePage() {
   }
 
 
-  // --------------------------------------------
-  // DELETE SKU
-  // --------------------------------------------
+  // ============================================
+  // UPDATE STOCK
+  // ============================================
+
+  async function updateStock(
+    item: ProductItem
+  ) {
+    const value =
+      stockEdits[item.id] ??
+      String(
+        item.qty_in_stock
+      );
+
+    const newStock =
+      Number(value);
+
+
+    if (
+      value.trim() === "" ||
+      !Number.isInteger(
+        newStock
+      ) ||
+      newStock < 0
+    ) {
+      setError(
+        "Stock must be a whole number of 0 or more."
+      );
+
+      return;
+    }
+
+
+    if (
+      newStock ===
+      item.qty_in_stock
+    ) {
+      setSuccess(
+        `"${item.sku}" stock is already ${newStock}.`
+      );
+
+      return;
+    }
+
+
+    setError("");
+    setSuccess("");
+    setSavingStock(
+      item.id
+    );
+
+
+    try {
+      const response =
+        await authenticatedFetch(
+          `/product-items/${item.id}`,
+          {
+            method: "PATCH",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body: JSON.stringify({
+              qty_in_stock:
+                newStock,
+            }),
+          }
+        );
+
+
+      if (!response) {
+        return;
+      }
+
+
+      const data =
+        await response.json();
+
+
+      if (!response.ok) {
+        throw new Error(
+          data.detail ??
+            "Unable to update stock"
+        );
+      }
+
+
+      setSuccess(
+        `"${item.sku}" stock updated from ${item.qty_in_stock} to ${newStock}.`
+      );
+
+
+      setStockEdits(
+        (current) => {
+          const copy = {
+            ...current,
+          };
+
+          delete copy[
+            item.id
+          ];
+
+          return copy;
+        }
+      );
+
+
+      await reloadItems();
+
+    } catch (err) {
+
+      if (err instanceof Error) {
+        setError(
+          err.message
+        );
+      } else {
+        setError(
+          "Unable to update stock"
+        );
+      }
+
+    } finally {
+      setSavingStock(
+        null
+      );
+    }
+  }
+
+
+  // ============================================
+  // DEACTIVATE SKU
+  // ============================================
 
   async function deleteItem(
     item: ProductItem
@@ -807,8 +935,7 @@ export default function ProductManagePage() {
 
       if (!response.ok) {
         let message =
-          "Unable to delete SKU";
-
+          "Unable to deactivate SKU";
 
         try {
           const data =
@@ -819,11 +946,12 @@ export default function ProductManagePage() {
             message;
 
         } catch {
-          // 204 responses have no JSON.
+          // 204 response
         }
 
-
-        throw new Error(message);
+        throw new Error(
+          message
+        );
       }
 
 
@@ -837,19 +965,21 @@ export default function ProductManagePage() {
     } catch (err) {
 
       if (err instanceof Error) {
-        setError(err.message);
+        setError(
+          err.message
+        );
       } else {
         setError(
-          "Unable to delete SKU"
+          "Unable to deactivate SKU"
         );
       }
     }
   }
 
 
-  // --------------------------------------------
+  // ============================================
   // IMAGE UPLOAD
-  // --------------------------------------------
+  // ============================================
 
   async function handleImageUpload(
     event: FormEvent<HTMLFormElement>
@@ -869,7 +999,9 @@ export default function ProductManagePage() {
     }
 
 
-    setUploadingImage(true);
+    setUploadingImage(
+      true
+    );
 
 
     try {
@@ -887,7 +1019,10 @@ export default function ProductManagePage() {
         imageFile
       );
 
-      if (imageAlt.trim()) {
+
+      if (
+        imageAlt.trim()
+      ) {
         formData.append(
           "alt_text",
           imageAlt.trim()
@@ -897,13 +1032,17 @@ export default function ProductManagePage() {
 
       formData.append(
         "sort_order",
-        String(images.length)
+        String(
+          images.length
+        )
       );
 
 
       formData.append(
         "is_primary",
-        String(imagePrimary)
+        String(
+          imagePrimary
+        )
       );
 
 
@@ -946,7 +1085,8 @@ export default function ProductManagePage() {
 
 
       if (fileInput) {
-        fileInput.value = "";
+        fileInput.value =
+          "";
       }
 
 
@@ -960,7 +1100,9 @@ export default function ProductManagePage() {
     } catch (err) {
 
       if (err instanceof Error) {
-        setError(err.message);
+        setError(
+          err.message
+        );
       } else {
         setError(
           "Unable to upload image"
@@ -968,14 +1110,16 @@ export default function ProductManagePage() {
       }
 
     } finally {
-      setUploadingImage(false);
+      setUploadingImage(
+        false
+      );
     }
   }
 
 
-  // --------------------------------------------
+  // ============================================
   // SET PRIMARY IMAGE
-  // --------------------------------------------
+  // ============================================
 
   async function makePrimary(
     image: ProductImage
@@ -996,9 +1140,11 @@ export default function ProductManagePage() {
                 "application/json",
             },
 
-            body: JSON.stringify({
-              is_primary: true,
-            }),
+            body:
+              JSON.stringify({
+                is_primary:
+                  true,
+              }),
           }
         );
 
@@ -1030,7 +1176,9 @@ export default function ProductManagePage() {
     } catch (err) {
 
       if (err instanceof Error) {
-        setError(err.message);
+        setError(
+          err.message
+        );
       } else {
         setError(
           "Unable to update image"
@@ -1040,9 +1188,9 @@ export default function ProductManagePage() {
   }
 
 
-  // --------------------------------------------
+  // ============================================
   // DELETE IMAGE
-  // --------------------------------------------
+  // ============================================
 
   async function deleteImage(
     image: ProductImage
@@ -1081,7 +1229,6 @@ export default function ProductManagePage() {
         let message =
           "Unable to delete image";
 
-
         try {
           const data =
             await response.json();
@@ -1091,11 +1238,12 @@ export default function ProductManagePage() {
             message;
 
         } catch {
-          // No JSON body.
+          // Empty response
         }
 
-
-        throw new Error(message);
+        throw new Error(
+          message
+        );
       }
 
 
@@ -1109,7 +1257,9 @@ export default function ProductManagePage() {
     } catch (err) {
 
       if (err instanceof Error) {
-        setError(err.message);
+        setError(
+          err.message
+        );
       } else {
         setError(
           "Unable to delete image"
@@ -1119,23 +1269,25 @@ export default function ProductManagePage() {
   }
 
 
-  // --------------------------------------------
+  // ============================================
   // LOADING
-  // --------------------------------------------
+  // ============================================
 
   if (loading) {
     return (
       <main
         className="flex min-h-screen items-center justify-center"
         style={{
-          backgroundColor: "#fcfcfc",
+          backgroundColor:
+            "#fcfcfc",
           color: "#111111",
         }}
       >
         <p
           className="text-sm"
           style={{
-            color: "#777777",
+            color:
+              "#777777",
           }}
         >
           Loading product...
@@ -1145,20 +1297,20 @@ export default function ProductManagePage() {
   }
 
 
-  // --------------------------------------------
-  // PRODUCT MISSING
-  // --------------------------------------------
+  // ============================================
+  // PRODUCT NOT FOUND
+  // ============================================
 
   if (!product) {
     return (
       <main
         className="flex min-h-screen items-center justify-center"
         style={{
-          backgroundColor: "#fcfcfc",
+          backgroundColor:
+            "#fcfcfc",
           color: "#111111",
         }}
       >
-
         <div className="text-center">
 
           <p>
@@ -1173,21 +1325,21 @@ export default function ProductManagePage() {
           </Link>
 
         </div>
-
       </main>
     );
   }
 
 
-  // --------------------------------------------
+  // ============================================
   // PAGE
-  // --------------------------------------------
+  // ============================================
 
   return (
     <main
       className="min-h-screen"
       style={{
-        backgroundColor: "#fcfcfc",
+        backgroundColor:
+          "#fcfcfc",
         color: "#111111",
       }}
     >
@@ -1196,8 +1348,10 @@ export default function ProductManagePage() {
       <header
         className="border-b"
         style={{
-          backgroundColor: "#fcfcfc",
-          borderColor: "#e5e5e5",
+          backgroundColor:
+            "#fcfcfc",
+          borderColor:
+            "#e5e5e5",
         }}
       >
 
@@ -1215,7 +1369,8 @@ export default function ProductManagePage() {
             <span
               className="text-xs"
               style={{
-                color: "#777777",
+                color:
+                  "#777777",
               }}
             >
               ADMIN
@@ -1253,14 +1408,16 @@ export default function ProductManagePage() {
         <div
           className="border-b pb-8"
           style={{
-            borderColor: "#e5e5e5",
+            borderColor:
+              "#e5e5e5",
           }}
         >
 
           <p
             className="mb-2 text-xs uppercase tracking-[0.15em]"
             style={{
-              color: "#777777",
+              color:
+                "#777777",
             }}
           >
             Product
@@ -1278,7 +1435,8 @@ export default function ProductManagePage() {
               <p
                 className="mt-2 text-sm"
                 style={{
-                  color: "#777777",
+                  color:
+                    "#777777",
                 }}
               >
                 /products/{product.slug}
@@ -1291,8 +1449,10 @@ export default function ProductManagePage() {
               href={`/products/${product.slug}`}
               className="w-fit border px-5 py-3 text-xs font-medium"
               style={{
-                borderColor: "#d9d9d9",
-                backgroundColor: "#ffffff",
+                borderColor:
+                  "#d9d9d9",
+                backgroundColor:
+                  "#ffffff",
               }}
             >
               VIEW PRODUCT
@@ -1308,20 +1468,21 @@ export default function ProductManagePage() {
           <div
             className="mt-8 border px-4 py-3"
             style={{
-              borderColor: "#fecaca",
-              backgroundColor: "#fef2f2",
+              borderColor:
+                "#fecaca",
+              backgroundColor:
+                "#fef2f2",
             }}
           >
-
             <p
               className="text-sm"
               style={{
-                color: "#b91c1c",
+                color:
+                  "#b91c1c",
               }}
             >
               {error}
             </p>
-
           </div>
         )}
 
@@ -1330,27 +1491,28 @@ export default function ProductManagePage() {
           <div
             className="mt-8 border px-4 py-3"
             style={{
-              borderColor: "#bbf7d0",
-              backgroundColor: "#f0fdf4",
+              borderColor:
+                "#bbf7d0",
+              backgroundColor:
+                "#f0fdf4",
             }}
           >
-
             <p
               className="text-sm"
               style={{
-                color: "#166534",
+                color:
+                  "#166534",
               }}
             >
               {success}
             </p>
-
           </div>
         )}
 
 
-        {/* =================================================
+        {/* ======================================
             IMAGES
-        ================================================= */}
+        ====================================== */}
 
         <section className="py-12">
 
@@ -1363,11 +1525,13 @@ export default function ProductManagePage() {
             <p
               className="mt-2 text-sm"
               style={{
-                color: "#777777",
+                color:
+                  "#777777",
               }}
             >
-              Upload JPEG, PNG or WebP images.
-              Images are stored in Cloudflare R2.
+              Upload JPEG, PNG or WebP
+              images. Images are stored
+              in Cloudflare R2.
             </p>
 
           </div>
@@ -1377,11 +1541,15 @@ export default function ProductManagePage() {
 
             {/* IMAGE UPLOAD */}
             <form
-              onSubmit={handleImageUpload}
+              onSubmit={
+                handleImageUpload
+              }
               className="border p-6"
               style={{
-                borderColor: "#e5e5e5",
-                backgroundColor: "#ffffff",
+                borderColor:
+                  "#e5e5e5",
+                backgroundColor:
+                  "#ffffff",
               }}
             >
 
@@ -1405,7 +1573,8 @@ export default function ProductManagePage() {
                   accept="image/jpeg,image/png,image/webp"
                   onChange={(event) =>
                     setImageFile(
-                      event.target.files?.[0] ??
+                      event.target
+                        .files?.[0] ??
                         null
                     )
                   }
@@ -1434,12 +1603,17 @@ export default function ProductManagePage() {
                       event.target.value
                     )
                   }
-                  placeholder={product.name}
+                  placeholder={
+                    product.name
+                  }
                   className="w-full border px-4 py-3 text-sm outline-none"
                   style={{
-                    borderColor: "#d9d9d9",
-                    backgroundColor: "#ffffff",
-                    color: "#111111",
+                    borderColor:
+                      "#d9d9d9",
+                    backgroundColor:
+                      "#ffffff",
+                    color:
+                      "#111111",
                   }}
                 />
 
@@ -1450,10 +1624,13 @@ export default function ProductManagePage() {
 
                 <input
                   type="checkbox"
-                  checked={imagePrimary}
+                  checked={
+                    imagePrimary
+                  }
                   onChange={(event) =>
                     setImagePrimary(
-                      event.target.checked
+                      event.target
+                        .checked
                     )
                   }
                 />
@@ -1471,8 +1648,10 @@ export default function ProductManagePage() {
                 }
                 className="mt-7 w-full px-5 py-3 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-40"
                 style={{
-                  backgroundColor: "#111111",
-                  color: "#ffffff",
+                  backgroundColor:
+                    "#111111",
+                  color:
+                    "#ffffff",
                 }}
               >
                 {uploadingImage
@@ -1483,7 +1662,7 @@ export default function ProductManagePage() {
             </form>
 
 
-            {/* IMAGES */}
+            {/* IMAGE LIST */}
             <div>
 
               {images.length === 0 ? (
@@ -1491,14 +1670,17 @@ export default function ProductManagePage() {
                 <div
                   className="flex min-h-56 items-center justify-center border"
                   style={{
-                    borderColor: "#e5e5e5",
-                    backgroundColor: "#ffffff",
+                    borderColor:
+                      "#e5e5e5",
+                    backgroundColor:
+                      "#ffffff",
                   }}
                 >
                   <p
                     className="text-sm"
                     style={{
-                      color: "#777777",
+                      color:
+                        "#777777",
                     }}
                   >
                     No images uploaded yet.
@@ -1513,13 +1695,17 @@ export default function ProductManagePage() {
                     (image) => (
 
                       <article
-                        key={image.id}
+                        key={
+                          image.id
+                        }
                       >
 
                         <div className="relative aspect-[3/4] overflow-hidden bg-[#f5f5f5]">
 
                           <img
-                            src={image.image_url}
+                            src={
+                              image.image_url
+                            }
                             alt={
                               image.alt_text ??
                               product.name
@@ -1529,11 +1715,9 @@ export default function ProductManagePage() {
 
 
                           {image.is_primary && (
-
                             <span className="absolute left-3 top-3 bg-black px-2.5 py-1 text-[9px] font-medium text-white">
                               PRIMARY
                             </span>
-
                           )}
 
                         </div>
@@ -1542,7 +1726,6 @@ export default function ProductManagePage() {
                         <div className="mt-3 flex flex-wrap gap-3">
 
                           {!image.is_primary && (
-
                             <button
                               type="button"
                               onClick={() =>
@@ -1554,7 +1737,6 @@ export default function ProductManagePage() {
                             >
                               SET PRIMARY
                             </button>
-
                           )}
 
 
@@ -1567,7 +1749,8 @@ export default function ProductManagePage() {
                             }
                             className="text-xs font-medium"
                             style={{
-                              color: "#b91c1c",
+                              color:
+                                "#b91c1c",
                             }}
                           >
                             DELETE
@@ -1594,14 +1777,15 @@ export default function ProductManagePage() {
         <div
           className="border-t"
           style={{
-            borderColor: "#e5e5e5",
+            borderColor:
+              "#e5e5e5",
           }}
         />
 
 
-        {/* =================================================
+        {/* ======================================
             VARIANTS
-        ================================================= */}
+        ====================================== */}
 
         <section className="py-12">
 
@@ -1614,12 +1798,14 @@ export default function ProductManagePage() {
             <p
               className="mt-2 max-w-2xl text-sm leading-6"
               style={{
-                color: "#777777",
+                color:
+                  "#777777",
               }}
             >
-              Create one SKU for each sellable
-              combination. For example:
-              Black + Size M, or White + Size L.
+              Create one SKU for each
+              sellable combination. You
+              can also update stock for
+              existing variants below.
             </p>
 
           </div>
@@ -1627,16 +1813,20 @@ export default function ProductManagePage() {
 
           <div className="grid gap-10 lg:grid-cols-[420px_1fr]">
 
-            {/* ============================================
+            {/* ==================================
                 CREATE VARIANT
-            ============================================ */}
+            ================================== */}
 
             <form
-              onSubmit={handleCreateVariant}
+              onSubmit={
+                handleCreateVariant
+              }
               className="border p-6"
               style={{
-                borderColor: "#e5e5e5",
-                backgroundColor: "#ffffff",
+                borderColor:
+                  "#e5e5e5",
+                backgroundColor:
+                  "#ffffff",
               }}
             >
 
@@ -1667,9 +1857,12 @@ export default function ProductManagePage() {
                   placeholder="SUSI-TS-BLK-M"
                   className="w-full border px-4 py-3 text-sm uppercase outline-none"
                   style={{
-                    borderColor: "#d9d9d9",
-                    backgroundColor: "#ffffff",
-                    color: "#111111",
+                    borderColor:
+                      "#d9d9d9",
+                    backgroundColor:
+                      "#ffffff",
+                    color:
+                      "#111111",
                   }}
                   required
                 />
@@ -1701,9 +1894,12 @@ export default function ProductManagePage() {
                   placeholder="39000"
                   className="w-full border px-4 py-3 text-sm outline-none"
                   style={{
-                    borderColor: "#d9d9d9",
-                    backgroundColor: "#ffffff",
-                    color: "#111111",
+                    borderColor:
+                      "#d9d9d9",
+                    backgroundColor:
+                      "#ffffff",
+                    color:
+                      "#111111",
                   }}
                   required
                 />
@@ -1711,14 +1907,14 @@ export default function ProductManagePage() {
               </div>
 
 
-              {/* STOCK */}
+              {/* INITIAL STOCK */}
               <div className="mt-6">
 
                 <label
                   htmlFor="stock"
                   className="mb-2 block text-sm font-medium"
                 >
-                  Stock
+                  Initial stock
                 </label>
 
                 <input
@@ -1734,9 +1930,12 @@ export default function ProductManagePage() {
                   }
                   className="w-full border px-4 py-3 text-sm outline-none"
                   style={{
-                    borderColor: "#d9d9d9",
-                    backgroundColor: "#ffffff",
-                    color: "#111111",
+                    borderColor:
+                      "#d9d9d9",
+                    backgroundColor:
+                      "#ffffff",
+                    color:
+                      "#111111",
                   }}
                   required
                 />
@@ -1745,19 +1944,22 @@ export default function ProductManagePage() {
 
 
               {/* VARIATIONS */}
-              {variations.length > 0 && (
+              {variations.length >
+                0 && (
 
                 <div
                   className="mt-8 border-t pt-7"
                   style={{
-                    borderColor: "#e5e5e5",
+                    borderColor:
+                      "#e5e5e5",
                   }}
                 >
 
                   <p
                     className="mb-6 text-xs uppercase tracking-[0.14em]"
                     style={{
-                      color: "#777777",
+                      color:
+                        "#777777",
                     }}
                   >
                     Options
@@ -1767,8 +1969,9 @@ export default function ProductManagePage() {
                   <div className="space-y-8">
 
                     {variations.map(
-                      (variation) => {
-
+                      (
+                        variation
+                      ) => {
                         const variationOptions =
                           optionsByVariation[
                             variation.id
@@ -1784,15 +1987,18 @@ export default function ProductManagePage() {
 
 
                         return (
-
                           <div
-                            key={variation.id}
+                            key={
+                              variation.id
+                            }
                           >
 
                             <div className="mb-3 flex items-center justify-between">
 
                               <p className="text-sm font-medium">
-                                {variation.name}
+                                {
+                                  variation.name
+                                }
                               </p>
 
 
@@ -1804,18 +2010,18 @@ export default function ProductManagePage() {
                                   type="button"
                                   onClick={() =>
                                     setSelectedOptions(
-                                      (current) => {
-
+                                      (
+                                        current
+                                      ) => {
                                         const copy =
                                           {
                                             ...current,
                                           };
 
-
                                         delete copy[
-                                          variation.id
+                                          variation
+                                            .id
                                         ];
-
 
                                         return copy;
                                       }
@@ -1823,7 +2029,8 @@ export default function ProductManagePage() {
                                   }
                                   className="text-xs underline underline-offset-4"
                                   style={{
-                                    color: "#777777",
+                                    color:
+                                      "#777777",
                                   }}
                                 >
                                   Clear
@@ -1837,17 +2044,18 @@ export default function ProductManagePage() {
                             <div className="flex flex-wrap gap-2">
 
                               {variationOptions.map(
-                                (option) => {
-
+                                (
+                                  option
+                                ) => {
                                   const selected =
                                     selectedOptions[
-                                      variation.id
+                                      variation
+                                        .id
                                     ] ===
                                     option.id;
 
 
                                   return (
-
                                     <button
                                       key={
                                         option.id
@@ -1881,18 +2089,14 @@ export default function ProductManagePage() {
                                         option.value
                                       }
                                     </button>
-
                                   );
-
                                 }
                               )}
 
                             </div>
 
                           </div>
-
                         );
-
                       }
                     )}
 
@@ -1903,7 +2107,7 @@ export default function ProductManagePage() {
               )}
 
 
-              {/* SELECTED SUMMARY */}
+              {/* SELECTED OPTIONS */}
               {Object.keys(
                 selectedOptions
               ).length > 0 && (
@@ -1911,15 +2115,18 @@ export default function ProductManagePage() {
                 <div
                   className="mt-8 border p-4"
                   style={{
-                    borderColor: "#e5e5e5",
-                    backgroundColor: "#f7f7f7",
+                    borderColor:
+                      "#e5e5e5",
+                    backgroundColor:
+                      "#f7f7f7",
                   }}
                 >
 
                   <p
                     className="text-xs font-medium uppercase tracking-[0.1em]"
                     style={{
-                      color: "#777777",
+                      color:
+                        "#777777",
                     }}
                   >
                     Selected
@@ -1931,8 +2138,9 @@ export default function ProductManagePage() {
                     {Object.values(
                       selectedOptions
                     ).map(
-                      (optionId) => {
-
+                      (
+                        optionId
+                      ) => {
                         const info =
                           optionLookup.get(
                             optionId
@@ -1945,27 +2153,29 @@ export default function ProductManagePage() {
 
 
                         return (
-
                           <span
-                            key={optionId}
+                            key={
+                              optionId
+                            }
                             className="border bg-white px-3 py-1.5 text-xs"
                             style={{
-                              borderColor: "#d9d9d9",
+                              borderColor:
+                                "#d9d9d9",
                             }}
                           >
                             {
-                              info.variation
+                              info
+                                .variation
                                 .name
                             }
                             :{" "}
                             {
-                              info.option
+                              info
+                                .option
                                 .value
                             }
                           </span>
-
                         );
-
                       }
                     )}
 
@@ -1978,11 +2188,15 @@ export default function ProductManagePage() {
 
               <button
                 type="submit"
-                disabled={savingVariant}
+                disabled={
+                  savingVariant
+                }
                 className="mt-8 w-full px-5 py-3 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-40"
                 style={{
-                  backgroundColor: "#111111",
-                  color: "#ffffff",
+                  backgroundColor:
+                    "#111111",
+                  color:
+                    "#ffffff",
                 }}
               >
                 {savingVariant
@@ -1993,9 +2207,9 @@ export default function ProductManagePage() {
             </form>
 
 
-            {/* ============================================
+            {/* ==================================
                 EXISTING VARIANTS
-            ============================================ */}
+            ================================== */}
 
             <div>
 
@@ -2004,20 +2218,21 @@ export default function ProductManagePage() {
                 <div
                   className="flex min-h-56 items-center justify-center border"
                   style={{
-                    borderColor: "#e5e5e5",
-                    backgroundColor: "#ffffff",
+                    borderColor:
+                      "#e5e5e5",
+                    backgroundColor:
+                      "#ffffff",
                   }}
                 >
-
                   <p
                     className="text-sm"
                     style={{
-                      color: "#777777",
+                      color:
+                        "#777777",
                     }}
                   >
                     No variants yet.
                   </p>
-
                 </div>
 
               ) : (
@@ -2025,18 +2240,23 @@ export default function ProductManagePage() {
                 <div
                   className="overflow-hidden border"
                   style={{
-                    borderColor: "#e5e5e5",
-                    backgroundColor: "#ffffff",
+                    borderColor:
+                      "#e5e5e5",
+                    backgroundColor:
+                      "#ffffff",
                   }}
                 >
 
                   {/* TABLE HEADER */}
                   <div
-                    className="hidden grid-cols-[1fr_1fr_120px_90px_90px] gap-4 border-b px-5 py-3 text-xs font-medium lg:grid"
+                    className="hidden grid-cols-[1.2fr_1.2fr_110px_190px_90px] gap-4 border-b px-5 py-3 text-xs font-medium lg:grid"
                     style={{
-                      borderColor: "#e5e5e5",
-                      backgroundColor: "#f5f5f5",
-                      color: "#777777",
+                      borderColor:
+                        "#e5e5e5",
+                      backgroundColor:
+                        "#f5f5f5",
+                      color:
+                        "#777777",
                     }}
                   >
 
@@ -2072,27 +2292,54 @@ export default function ProductManagePage() {
                         ] ?? [];
 
 
-                      return (
+                      const displayedStock =
+                        stockEdits[
+                          item.id
+                        ] ??
+                        String(
+                          item.qty_in_stock
+                        );
 
+
+                      const displayedStockNumber =
+                        Number(
+                          displayedStock
+                        );
+
+
+                      const stockChanged =
+                        displayedStock !==
+                        String(
+                          item.qty_in_stock
+                        );
+
+
+                      return (
                         <div
-                          key={item.id}
-                          className="grid gap-4 border-b px-5 py-5 last:border-b-0 lg:grid-cols-[1fr_1fr_120px_90px_90px] lg:items-center"
+                          key={
+                            item.id
+                          }
+                          className="grid gap-5 border-b px-5 py-6 last:border-b-0 lg:grid-cols-[1.2fr_1.2fr_110px_190px_90px] lg:items-center"
                           style={{
-                            borderColor: "#e5e5e5",
+                            borderColor:
+                              "#e5e5e5",
                           }}
                         >
 
                           {/* SKU */}
                           <div>
 
-                            <p className="font-medium">
-                              {item.sku}
+                            <p className="break-all text-sm font-medium">
+                              {
+                                item.sku
+                              }
                             </p>
 
                             <p
                               className="mt-1 text-xs lg:hidden"
                               style={{
-                                color: "#777777",
+                                color:
+                                  "#777777",
                               }}
                             >
                               SKU
@@ -2110,7 +2357,8 @@ export default function ProductManagePage() {
                               <span
                                 className="text-sm"
                                 style={{
-                                  color: "#777777",
+                                  color:
+                                    "#777777",
                                 }}
                               >
                                 No options
@@ -2127,20 +2375,23 @@ export default function ProductManagePage() {
 
                                     const info =
                                       optionLookup.get(
-                                        configuration.variation_option_id
+                                        configuration
+                                          .variation_option_id
                                       );
 
 
-                                    if (!info) {
+                                    if (
+                                      !info
+                                    ) {
                                       return null;
                                     }
 
 
                                     return (
-
                                       <span
                                         key={
-                                          configuration.id
+                                          configuration
+                                            .id
                                         }
                                         className="border px-2.5 py-1 text-xs"
                                         style={{
@@ -2157,13 +2408,12 @@ export default function ProductManagePage() {
                                         }
                                         :{" "}
                                         {
-                                          info.option
+                                          info
+                                            .option
                                             .value
                                         }
                                       </span>
-
                                     );
-
                                   }
                                 )}
 
@@ -2175,60 +2425,237 @@ export default function ProductManagePage() {
 
 
                           {/* PRICE */}
-                          <p className="text-sm font-medium">
-                            {formatKRW(
-                              item.price
-                            )}
-                          </p>
-
-
-                          {/* STOCK */}
                           <div>
 
-                            <p className="text-sm">
-                              {
-                                item.qty_in_stock
-                              }
+                            <p className="text-sm font-medium">
+                              {formatKRW(
+                                item.price
+                              )}
                             </p>
 
-                            {item.qty_in_stock <=
-                              3 && (
-
-                              <p
-                                className="mt-1 text-[10px]"
-                                style={{
-                                  color:
-                                    "#b45309",
-                                }}
-                              >
-                                LOW
-                              </p>
-
-                            )}
+                            <p
+                              className="mt-1 text-xs lg:hidden"
+                              style={{
+                                color:
+                                  "#777777",
+                              }}
+                            >
+                              Price
+                            </p>
 
                           </div>
 
 
-                          {/* DELETE */}
-                          <button
-                            type="button"
-                            onClick={() =>
-                              deleteItem(
-                                item
-                              )
-                            }
-                            className="w-fit text-xs font-medium"
-                            style={{
-                              color: "#b91c1c",
-                            }}
-                          >
-                            DELETE
-                          </button>
+                          {/* STOCK EDITOR */}
+                          <div>
+
+                            <p
+                              className="mb-2 text-[10px] uppercase tracking-[0.1em] lg:hidden"
+                              style={{
+                                color:
+                                  "#777777",
+                              }}
+                            >
+                              Stock
+                            </p>
+
+
+                            <div className="flex items-center gap-2">
+
+                              {/* MINUS */}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const current =
+                                    Number(
+                                      stockEdits[
+                                        item.id
+                                      ] ??
+                                        item.qty_in_stock
+                                    );
+
+                                  const safeCurrent =
+                                    Number.isFinite(
+                                      current
+                                    )
+                                      ? current
+                                      : 0;
+
+                                  setStockEdits(
+                                    (
+                                      values
+                                    ) => ({
+                                      ...values,
+
+                                      [item.id]:
+                                        String(
+                                          Math.max(
+                                            0,
+                                            safeCurrent -
+                                              1
+                                          )
+                                        ),
+                                    })
+                                  );
+                                }}
+                                className="flex h-9 w-9 shrink-0 items-center justify-center border text-base transition hover:bg-[#f5f5f5]"
+                                style={{
+                                  borderColor:
+                                    "#d9d9d9",
+                                }}
+                              >
+                                −
+                              </button>
+
+
+                              {/* STOCK INPUT */}
+                              <input
+                                type="number"
+                                min="0"
+                                step="1"
+                                value={
+                                  displayedStock
+                                }
+                                onChange={(
+                                  event
+                                ) =>
+                                  setStockEdits(
+                                    (
+                                      values
+                                    ) => ({
+                                      ...values,
+
+                                      [item.id]:
+                                        event
+                                          .target
+                                          .value,
+                                    })
+                                  )
+                                }
+                                className="h-9 w-16 border text-center text-sm outline-none focus:border-black"
+                                style={{
+                                  borderColor:
+                                    "#d9d9d9",
+                                  backgroundColor:
+                                    "#ffffff",
+                                }}
+                              />
+
+
+                              {/* PLUS */}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const current =
+                                    Number(
+                                      stockEdits[
+                                        item.id
+                                      ] ??
+                                        item.qty_in_stock
+                                    );
+
+                                  const safeCurrent =
+                                    Number.isFinite(
+                                      current
+                                    )
+                                      ? current
+                                      : 0;
+
+                                  setStockEdits(
+                                    (
+                                      values
+                                    ) => ({
+                                      ...values,
+
+                                      [item.id]:
+                                        String(
+                                          safeCurrent +
+                                            1
+                                        ),
+                                    })
+                                  );
+                                }}
+                                className="flex h-9 w-9 shrink-0 items-center justify-center border text-base transition hover:bg-[#f5f5f5]"
+                                style={{
+                                  borderColor:
+                                    "#d9d9d9",
+                                }}
+                              >
+                                +
+                              </button>
+
+                            </div>
+
+
+                            <div className="mt-2 flex items-center gap-3">
+
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  updateStock(
+                                    item
+                                  )
+                                }
+                                disabled={
+                                  savingStock ===
+                                    item.id ||
+                                  !stockChanged
+                                }
+                                className="text-[10px] font-medium uppercase tracking-[0.08em] underline underline-offset-4 disabled:cursor-not-allowed disabled:opacity-30"
+                              >
+                                {savingStock ===
+                                item.id
+                                  ? "SAVING..."
+                                  : "UPDATE STOCK"}
+                              </button>
+
+
+                              {Number.isFinite(
+                                displayedStockNumber
+                              ) &&
+                                displayedStockNumber <=
+                                  3 && (
+
+                                <span
+                                  className="text-[10px] font-medium"
+                                  style={{
+                                    color:
+                                      "#b45309",
+                                  }}
+                                >
+                                  LOW
+                                </span>
+
+                              )}
+
+                            </div>
+
+                          </div>
+
+
+                          {/* ACTION */}
+                          <div>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                deleteItem(
+                                  item
+                                )
+                              }
+                              className="w-fit text-xs font-medium"
+                              style={{
+                                color:
+                                  "#b91c1c",
+                              }}
+                            >
+                              DEACTIVATE
+                            </button>
+
+                          </div>
 
                         </div>
-
                       );
-
                     }
                   )}
 

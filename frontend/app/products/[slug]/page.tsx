@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 
+import Navbar from "@/components/Navbar";
 import ProductDetails from "./ProductDetails";
 
 
@@ -48,7 +49,8 @@ export type StorefrontProductDetail = {
 
 
 const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
+  process.env.NEXT_PUBLIC_API_URL ??
+  "http://127.0.0.1:8000";
 
 
 async function getProduct(
@@ -66,7 +68,9 @@ async function getProduct(
   }
 
   if (!response.ok) {
-    throw new Error("Failed to load product");
+    throw new Error(
+      "Failed to load product"
+    );
   }
 
   return response.json();
@@ -83,13 +87,26 @@ type ProductPageProps = {
 export default async function ProductPage({
   params,
 }: ProductPageProps) {
-  const { slug } = await params;
+  const { slug } =
+    await params;
 
-  const product = await getProduct(slug);
+  const product =
+    await getProduct(slug);
 
   if (!product) {
     notFound();
   }
 
-  return <ProductDetails product={product} />;
+
+  return (
+    <main className="min-h-screen bg-[#fcfcfc] pt-16 text-[#1f1f1f]">
+
+      <Navbar />
+
+      <ProductDetails
+        product={product}
+      />
+
+    </main>
+  );
 }

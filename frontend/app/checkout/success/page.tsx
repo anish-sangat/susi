@@ -315,6 +315,10 @@ export default function CheckoutSuccessPage() {
                   order.id
                 )}`}
                 className="mt-7 inline-block bg-black px-7 py-3 text-sm text-white"
+                style={{
+                  backgroundColor: "#111111",
+                  color: "#ffffff",
+                }}
               >
                 RETURN TO PAYMENT
               </Link>

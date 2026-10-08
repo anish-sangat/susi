@@ -1,4 +1,3 @@
-
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from uuid import UUID
@@ -7,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.auth.dependencies import get_current_user
+from app.auth.dependencies import get_current_user, require_admin
 from app.db.database import get_db
 from app.models.catalog import Product, ProductItem
 from app.models.cart import ShoppingCart, ShoppingCartItem
@@ -37,12 +36,16 @@ def build_order_response(
 
     lines = db.scalars(
         select(OrderLine)
-        .where(OrderLine.order_id == order.id)
+        .where(
+            OrderLine.order_id == order.id
+        )
     ).all()
 
     addresses = db.scalars(
         select(OrderAddress)
-        .where(OrderAddress.order_id == order.id)
+        .where(
+            OrderAddress.order_id == order.id
+        )
     ).all()
 
     return OrderResponse(
@@ -64,6 +67,10 @@ def build_order_response(
         addresses=addresses,
     )
 
+
+# =========================================================
+# CREATE ORDER
+# =========================================================
 
 @router.post(
     "",
@@ -205,7 +212,9 @@ def create_order(
     now = datetime.now(timezone.utc)
 
     reservation_expires_at = (
-        now + timedelta(minutes=RESERVATION_MINUTES)
+        now + timedelta(
+            minutes=RESERVATION_MINUTES
+        )
     )
 
     order = ShopOrder(
@@ -298,6 +307,10 @@ def create_order(
     )
 
 
+# =========================================================
+# CUSTOMER: GET MY ORDERS
+# =========================================================
+
 @router.get(
     "",
     response_model=list[OrderResponse],
@@ -324,6 +337,40 @@ def get_my_orders(
         for order in orders
     ]
 
+
+# =========================================================
+# ADMIN: GET ALL ORDERS
+# =========================================================
+
+@router.get(
+    "/admin/all",
+    response_model=list[OrderResponse],
+)
+def get_all_orders_admin(
+    db: Session = Depends(get_db),
+    current_user: SiteUser = Depends(require_admin),
+):
+    orders = db.scalars(
+        select(ShopOrder)
+        .order_by(
+            ShopOrder.created_at.desc()
+        )
+    ).all()
+
+    return [
+        build_order_response(
+            order=order,
+            db=db,
+        )
+        for order in orders
+    ]
+
+
+# =========================================================
+# CUSTOMER: GET ONE ORDER
+# IMPORTANT:
+# Keep this AFTER /admin/all
+# =========================================================
 
 @router.get(
     "/{order_id}",
@@ -352,4 +399,3 @@ def get_my_order(
         order=order,
         db=db,
     )
-

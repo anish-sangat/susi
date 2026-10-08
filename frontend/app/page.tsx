@@ -1,4 +1,6 @@
 import Link from "next/link";
+import Navbar from "@/components/Navbar";
+import ProductSlider from "@/components/ProductSlider";
 
 
 type StorefrontProduct = {
@@ -12,6 +14,14 @@ type StorefrontProduct = {
   is_available: boolean;
   primary_image_url: string | null;
   primary_image_alt: string | null;
+};
+
+
+type Category = {
+  id: string;
+  name: string;
+  slug: string;
+  is_active: boolean;
 };
 
 
@@ -40,139 +50,23 @@ async function getProducts(): Promise<
 }
 
 
-function formatKRW(
-  price: number | string
-) {
-  return new Intl.NumberFormat("ko-KR", {
-    style: "currency",
-    currency: "KRW",
-    maximumFractionDigits: 0,
-  }).format(Number(price));
-}
-
-
-function productSearchText(
-  product: StorefrontProduct
-) {
-  return `
-    ${product.name}
-    ${product.description ?? ""}
-  `.toLowerCase();
-}
-
-
-function isTshirt(
-  product: StorefrontProduct
-) {
-  const text = productSearchText(product);
-
-  return (
-    text.includes("t-shirt") ||
-    text.includes("tshirt") ||
-    text.includes("tee")
+async function getCategories(): Promise<
+  Category[]
+> {
+  const response = await fetch(
+    `${API_URL}/categories`,
+    {
+      cache: "no-store",
+    }
   );
-}
 
+  if (!response.ok) {
+    throw new Error(
+      "Failed to load categories"
+    );
+  }
 
-function isHoodie(
-  product: StorefrontProduct
-) {
-  const text = productSearchText(product);
-
-  return (
-    text.includes("hoodie") ||
-    text.includes("hooded")
-  );
-}
-
-
-function isJogger(
-  product: StorefrontProduct
-) {
-  const text = productSearchText(product);
-
-  return (
-    text.includes("jogger") ||
-    text.includes("joggers") ||
-    text.includes("sweatpant") ||
-    text.includes("track pant")
-  );
-}
-
-
-function ProductCard({
-  product,
-}: {
-  product: StorefrontProduct;
-}) {
-  return (
-    <article className="group">
-
-      <Link
-        href={`/products/${product.slug}`}
-        className="block"
-      >
-
-        {/* IMAGE */}
-        <div className="relative mb-4 aspect-[3/4] overflow-hidden rounded-[12px] bg-[#f5f5f5]">
-
-          {product.primary_image_url ? (
-
-            <img
-              src={product.primary_image_url}
-              alt={
-                product.primary_image_alt ??
-                product.name
-              }
-              className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-            />
-
-          ) : (
-
-            <div className="flex h-full w-full items-center justify-center">
-
-              <span className="text-sm font-semibold tracking-[0.2em] text-black/25">
-                SUSI
-              </span>
-
-            </div>
-
-          )}
-
-
-          {!product.is_available && (
-
-            <span className="absolute left-3 top-3 rounded-md bg-black px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.08em] text-white">
-              Sold out
-            </span>
-
-          )}
-
-        </div>
-
-
-        {/* PRODUCT INFO */}
-        <div className="space-y-1">
-
-          <h3 className="truncate text-sm font-medium leading-snug text-black/80 transition-colors group-hover:text-black">
-            {product.name}
-          </h3>
-
-
-          {product.price !== null && (
-
-            <p className="text-sm font-semibold">
-              {formatKRW(product.price)}
-            </p>
-
-          )}
-
-        </div>
-
-      </Link>
-
-    </article>
-  );
+  return response.json();
 }
 
 
@@ -195,10 +89,8 @@ function ProductSection({
       id={id}
       className="py-16 md:py-24"
     >
-
       <div className="susi-container">
 
-        {/* HEADING */}
         <div className="mb-10 flex items-end justify-between gap-6">
 
           <div>
@@ -217,7 +109,9 @@ function ProductSection({
 
 
           <p className="shrink-0 text-xs text-black/45">
-            {String(products.length).padStart(
+            {String(
+              products.length
+            ).padStart(
               2,
               "0"
             )}{" "}
@@ -227,151 +121,135 @@ function ProductSection({
         </div>
 
 
-        {/* PRODUCTS */}
-        {products.length > 0 ? (
-
-          <div className="grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 md:gap-x-6 lg:grid-cols-4">
-
-            {products.map((product) => (
-
-              <ProductCard
-                key={product.id}
-                product={product}
-              />
-
-            ))}
-
-          </div>
-
-        ) : (
-
-          <div className="flex min-h-52 items-center justify-center rounded-[12px] bg-[#f5f5f5]">
-
-            <p className="text-sm text-black/40">
-              Coming soon.
-            </p>
-
-          </div>
-
-        )}
+        <ProductSlider
+          products={products}
+        />
 
       </div>
-
     </section>
   );
 }
 
 
 export default async function Home() {
-  const products = await getProducts();
-
-  const tshirts =
-    products.filter(isTshirt);
-
-  const hoodies =
-    products.filter(isHoodie);
-
-  const joggers =
-    products.filter(isJogger);
+  const [
+    products,
+    categories,
+  ] = await Promise.all([
+    getProducts(),
+    getCategories(),
+  ]);
 
 
-  const heroProduct =
-    products.find(
-      (product) =>
-        product.primary_image_url
+  const tshirtCategory =
+    categories.find(
+      (category) =>
+        category.slug ===
+        "t-shirts"
     );
 
 
+  const hoodieCategory =
+    categories.find(
+      (category) =>
+        category.slug ===
+        "hoodies"
+    );
+
+
+  const joggerCategory =
+    categories.find(
+      (category) =>
+        category.slug ===
+        "joggers"
+    );
+
+
+  const tshirts =
+    tshirtCategory
+      ? products.filter(
+          (product) =>
+            product.category_id ===
+            tshirtCategory.id
+        )
+      : [];
+
+
+  const hoodies =
+    hoodieCategory
+      ? products.filter(
+          (product) =>
+            product.category_id ===
+            hoodieCategory.id
+        )
+      : [];
+
+
+  const joggers =
+    joggerCategory
+      ? products.filter(
+          (product) =>
+            product.category_id ===
+            joggerCategory.id
+        )
+      : [];
+
+
   return (
-    <main className="min-h-screen bg-[#fcfcfc] text-[#1f1f1f]">
+    <main className="min-h-screen bg-[#fcfcfc] pt-16 text-[#1f1f1f]">
 
-      {/* =========================================
-          NAVBAR
-      ========================================= */}
-
-      <header className="sticky top-0 z-50 border-b border-[#e8e8e8] bg-[#fcfcfc]/95 backdrop-blur-md">
-
-        <div className="susi-container flex h-16 items-center justify-between">
-
-          {/* LOGO */}
-          <Link
-            href="/"
-            className="text-xl font-bold tracking-[0.2em]"
-          >
-            SUSI
-          </Link>
+      {/* NAVBAR */}
+      <Navbar />
 
 
-          {/* NAV */}
-          <nav className="flex items-center gap-5 text-xs font-medium md:gap-8">
+      {/* HERO */}
+      <section className="relative z-0 mx-4 h-[85vh] overflow-hidden md:mx-8">
+
+        <img
+          src="/hero.jpg"
+          alt="SUSI hero"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+
+
+        <div className="absolute inset-0 bg-black/35" />
+
+
+        <div className="relative z-10 flex h-full items-center px-8 md:px-16">
+
+          <div className="max-w-xl text-white">
+
+            <p className="mb-4 text-xs uppercase tracking-[0.35em]">
+              SUSI
+            </p>
+
+
+            <h1 className="text-5xl font-semibold leading-none md:text-7xl">
+              Unisex Streetwear
+            </h1>
+
+
+            <p className="mt-6 max-w-md text-sm leading-6 text-white/80 md:text-base">
+              Minimal essentials inspired by
+              modern street culture.
+            </p>
+
 
             <a
               href="#collection"
-              className="hidden transition-opacity hover:opacity-50 sm:block"
+              className="mt-8 inline-block border border-white px-8 py-3 text-sm font-medium text-white transition hover:bg-white hover:text-black"
             >
-              Collection
+              SHOP NOW
             </a>
 
-            <Link
-              href="/cart"
-              className="transition-opacity hover:opacity-50"
-            >
-              Cart
-            </Link>
-
-            <Link
-              href="/account/orders"
-              className="transition-opacity hover:opacity-50"
-            >
-              Account
-            </Link>
-
-          </nav>
+          </div>
 
         </div>
 
-      </header>
+      </section>
 
-{/* HERO */}
-<section className="relative mx-4 h-[85vh] overflow-hidden md:mx-8">
-  <img
-    src="/hero.jpg"
-    alt="SUSI hero"
-    className="absolute inset-0 h-full w-full object-cover"
-  />
 
-  {/* dark overlay */}
-  <div className="absolute inset-0 bg-black/35" />
-
-  {/* content */}
-  <div className="relative z-10 flex h-full items-center px-8 md:px-16">
-    <div className="max-w-xl text-white">
-      <p className="mb-4 text-xs tracking-[0.35em] uppercase">
-        SUSI
-      </p>
-
-      <h1 className="text-5xl font-semibold leading-none md:text-7xl">
-        Unisex Streetwear
-      </h1>
-
-      <p className="mt-6 max-w-md text-sm leading-6 text-white/80 md:text-base">
-        Minimal essentials inspired by modern street culture.
-      </p>
-
-      <a
-        href="#collection"
-        className="mt-8 inline-block border border-white px-8 py-3 text-sm font-medium text-white transition hover:bg-white hover:text-black"
-      >
-        SHOP NOW
-      </a>
-    </div>
-  </div>
-</section>
-
-      {/* =========================================
-          COLLECTION — ALL PRODUCTS
-      ========================================= */}
-
+      {/* COLLECTION */}
       <ProductSection
         id="collection"
         title="Collection"
@@ -380,14 +258,10 @@ export default async function Home() {
       />
 
 
-      {/* SEPARATOR */}
       <div className="susi-container border-t border-[#e8e8e8]" />
 
 
-      {/* =========================================
-          T-SHIRTS
-      ========================================= */}
-
+      {/* T-SHIRTS */}
       <ProductSection
         id="t-shirts"
         title="T-Shirts"
@@ -396,14 +270,10 @@ export default async function Home() {
       />
 
 
-      {/* SEPARATOR */}
       <div className="susi-container border-t border-[#e8e8e8]" />
 
 
-      {/* =========================================
-          HOODIES
-      ========================================= */}
-
+      {/* HOODIES */}
       <ProductSection
         id="hoodies"
         title="Hoodies"
@@ -412,14 +282,10 @@ export default async function Home() {
       />
 
 
-      {/* SEPARATOR */}
       <div className="susi-container border-t border-[#e8e8e8]" />
 
 
-      {/* =========================================
-          JOGGERS
-      ========================================= */}
-
+      {/* JOGGERS */}
       <ProductSection
         id="joggers"
         title="Joggers"
@@ -428,16 +294,12 @@ export default async function Home() {
       />
 
 
-      {/* =========================================
-          SIMPLE DARK FOOTER
-      ========================================= */}
-
+      {/* FOOTER */}
       <footer className="mt-8 bg-[#1f1f1f] text-white">
 
         <div className="susi-container py-12 md:py-16">
 
           <div className="grid grid-cols-2 gap-10 md:grid-cols-4">
-
 
             {/* BRAND */}
             <div className="col-span-2 md:col-span-1">
@@ -448,6 +310,7 @@ export default async function Home() {
               >
                 SUSI
               </Link>
+
 
               <p className="mt-4 max-w-xs text-sm leading-6 text-white/60">
                 Unisex fashion.
@@ -464,6 +327,7 @@ export default async function Home() {
               <p className="mb-4 text-xs font-medium text-white/45">
                 Shop
               </p>
+
 
               <div className="space-y-2 text-sm">
 
@@ -507,6 +371,7 @@ export default async function Home() {
                 Account
               </p>
 
+
               <div className="space-y-2 text-sm">
 
                 <Link
@@ -535,11 +400,16 @@ export default async function Home() {
                 Follow
               </p>
 
+
               <div className="space-y-2 text-sm text-white/80">
 
-                <p>Instagram</p>
+                <p>
+                  Instagram
+                </p>
 
-                <p>TikTok</p>
+                <p>
+                  TikTok
+                </p>
 
               </div>
 
@@ -548,12 +418,13 @@ export default async function Home() {
           </div>
 
 
-          {/* BOTTOM */}
+          {/* BOTTOM FOOTER */}
           <div className="mt-12 flex flex-col gap-4 border-t border-white/15 pt-7 text-xs text-white/45 sm:flex-row sm:items-center sm:justify-between">
 
             <p>
               © {new Date().getFullYear()} SUSI
             </p>
+
 
             <div className="flex gap-6">
 

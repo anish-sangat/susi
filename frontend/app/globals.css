@@ -77,3 +77,24 @@ img {
     );
   }
 }
+
+/* Hide horizontal slider scrollbar */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Better touch scrolling on mobile */
+.no-scrollbar {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent accidental horizontal page overflow */
+html,
+body {
+  overflow-x: hidden;
+}

@@ -12,3 +12,4 @@ httpx
 standardwebhooks
 portone-server-sdk
 python-multipart
+boto3

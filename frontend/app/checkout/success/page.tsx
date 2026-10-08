@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 
 const API_URL =
@@ -57,20 +57,29 @@ type Order = {
 };
 
 
-function formatKRW(value: number | string) {
-  return new Intl.NumberFormat("ko-KR", {
-    style: "currency",
-    currency: "KRW",
-    maximumFractionDigits: 0,
-  }).format(Number(value));
+function formatKRW(
+  value: number | string
+) {
+  return new Intl.NumberFormat(
+    "ko-KR",
+    {
+      style: "currency",
+      currency: "KRW",
+      maximumFractionDigits: 0,
+    }
+  ).format(Number(value));
 }
 
 
-export default function CheckoutSuccessPage() {
+function CheckoutSuccessPageContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
-  const orderId = searchParams.get("order");
+  const searchParams =
+    useSearchParams();
+
+  const orderId =
+    searchParams.get("order");
+
 
   const [order, setOrder] =
     useState<Order | null>(null);
@@ -84,64 +93,90 @@ export default function CheckoutSuccessPage() {
 
   useEffect(() => {
     async function loadOrder() {
+
       if (!orderId) {
-        setError("No order was provided.");
+        setError(
+          "No order was provided."
+        );
+
         setLoading(false);
+
         return;
       }
+
 
       const token =
         sessionStorage.getItem(
           "susi_access_token"
         );
 
+
       if (!token) {
         router.push("/login");
+
         return;
       }
 
-      try {
-        const response = await fetch(
-          `${API_URL}/orders/${orderId}`,
-          {
-            headers: {
-              Authorization:
-                `Bearer ${token}`,
-            },
-          }
-        );
 
-        if (response.status === 401) {
+      try {
+
+        const response =
+          await fetch(
+            `${API_URL}/orders/${orderId}`,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+
+        if (
+          response.status === 401
+        ) {
           sessionStorage.removeItem(
             "susi_access_token"
           );
 
           router.push("/login");
+
           return;
         }
+
 
         const data =
           await response.json();
 
+
         if (!response.ok) {
+
           if (
-            typeof data.detail === "string"
+            typeof data.detail ===
+            "string"
           ) {
             throw new Error(
               data.detail
             );
           }
 
+
           throw new Error(
             "Unable to load order."
           );
         }
 
+
         setOrder(data);
 
       } catch (err) {
-        if (err instanceof Error) {
-          setError(err.message);
+
+        if (
+          err instanceof Error
+        ) {
+          setError(
+            err.message
+          );
         } else {
           setError(
             "Unable to load order."
@@ -149,9 +184,11 @@ export default function CheckoutSuccessPage() {
         }
 
       } finally {
+
         setLoading(false);
       }
     }
+
 
     loadOrder();
 
@@ -165,9 +202,11 @@ export default function CheckoutSuccessPage() {
   if (loading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-white text-black">
+
         <p className="text-sm text-neutral-500">
           Loading order...
         </p>
+
       </main>
     );
   }
@@ -180,6 +219,7 @@ export default function CheckoutSuccessPage() {
   if (!order) {
     return (
       <main className="min-h-screen bg-white px-6 py-12 text-black">
+
         <div className="mx-auto max-w-xl">
 
           <Link
@@ -189,20 +229,27 @@ export default function CheckoutSuccessPage() {
             SUSI
           </Link>
 
+
           <div className="mt-16 border border-neutral-200 p-8">
 
             <h1 className="text-2xl font-medium">
               Order unavailable
             </h1>
 
+
             <p className="mt-4 text-sm text-red-600">
               {error ||
                 "Unable to load this order."}
             </p>
 
+
             <Link
               href="/"
-              className="mt-8 inline-block bg-black px-6 py-3 text-sm text-white"
+              className="mt-8 inline-flex items-center justify-center px-6 py-3 text-sm font-medium"
+              style={{
+                backgroundColor: "#111111",
+                color: "#ffffff",
+              }}
             >
               RETURN HOME
             </Link>
@@ -210,6 +257,7 @@ export default function CheckoutSuccessPage() {
           </div>
 
         </div>
+
       </main>
     );
   }
@@ -218,7 +266,8 @@ export default function CheckoutSuccessPage() {
   const shippingAddress =
     order.addresses.find(
       (address) =>
-        address.address_type === "shipping"
+        address.address_type ===
+        "shipping"
     );
 
 
@@ -253,6 +302,7 @@ export default function CheckoutSuccessPage() {
           SUSI
         </Link>
 
+
         <span className="text-xs tracking-[0.2em] text-neutral-500">
           ORDER
         </span>
@@ -275,13 +325,16 @@ export default function CheckoutSuccessPage() {
                 ✓
               </div>
 
+
               <p className="mt-8 text-xs tracking-[0.25em] text-neutral-500">
                 THANK YOU
               </p>
 
+
               <h1 className="mt-3 text-3xl font-medium md:text-4xl">
                 Order confirmed
               </h1>
+
 
               <p className="mx-auto mt-4 max-w-lg text-sm leading-6 text-neutral-500">
                 Your payment has been confirmed
@@ -301,23 +354,28 @@ export default function CheckoutSuccessPage() {
                 PAYMENT
               </p>
 
+
               <h1 className="mt-3 text-3xl font-medium">
                 Payment pending
               </h1>
+
 
               <p className="mx-auto mt-4 max-w-lg text-sm leading-6 text-neutral-500">
                 This order has not yet been
                 confirmed as paid.
               </p>
 
+
               <Link
                 href={`/checkout/payment?order=${encodeURIComponent(
                   order.id
                 )}`}
-                className="mt-7 inline-block bg-black px-7 py-3 text-sm text-white"
+                className="mt-7 inline-flex items-center justify-center px-7 py-3 text-sm font-medium"
                 style={{
-                  backgroundColor: "#111111",
-                  color: "#ffffff",
+                  backgroundColor:
+                    "#111111",
+                  color:
+                    "#ffffff",
                 }}
               >
                 RETURN TO PAYMENT
@@ -335,13 +393,16 @@ export default function CheckoutSuccessPage() {
                 ×
               </div>
 
+
               <p className="mt-8 text-xs tracking-[0.25em] text-neutral-500">
                 PAYMENT
               </p>
 
+
               <h1 className="mt-3 text-3xl font-medium">
                 Payment unsuccessful
               </h1>
+
 
               <p className="mx-auto mt-4 max-w-lg text-sm leading-6 text-neutral-500">
                 This order was not completed.
@@ -349,9 +410,16 @@ export default function CheckoutSuccessPage() {
                 released.
               </p>
 
+
               <Link
                 href="/"
-                className="mt-7 inline-block bg-black px-7 py-3 text-sm text-white"
+                className="mt-7 inline-flex items-center justify-center px-7 py-3 text-sm font-medium"
+                style={{
+                  backgroundColor:
+                    "#111111",
+                  color:
+                    "#ffffff",
+                }}
               >
                 CONTINUE SHOPPING
               </Link>
@@ -370,9 +438,11 @@ export default function CheckoutSuccessPage() {
                   ORDER
                 </p>
 
+
                 <h1 className="mt-3 text-3xl font-medium">
                   Order status updated
                 </h1>
+
 
                 <p className="mx-auto mt-4 max-w-lg text-sm leading-6 text-neutral-500">
                   Your order status has changed.
@@ -397,6 +467,7 @@ export default function CheckoutSuccessPage() {
                 ORDER NUMBER
               </p>
 
+
               <p className="mt-2 break-all text-sm font-medium">
                 {order.order_number}
               </p>
@@ -409,6 +480,7 @@ export default function CheckoutSuccessPage() {
               <p className="text-xs tracking-wider text-neutral-500">
                 TOTAL
               </p>
+
 
               <p className="mt-2 text-lg font-medium">
                 {formatKRW(
@@ -424,39 +496,46 @@ export default function CheckoutSuccessPage() {
           {/* ITEMS */}
           <div className="divide-y divide-neutral-200">
 
-            {order.lines.map((line) => (
+            {order.lines.map(
+              (line) => (
 
-              <div
-                key={line.id}
-                className="flex justify-between gap-8 py-5"
-              >
+                <div
+                  key={line.id}
+                  className="flex justify-between gap-8 py-5"
+                >
 
-                <div>
+                  <div>
 
-                  <p className="text-sm font-medium">
-                    {line.product_name}
-                  </p>
+                    <p className="text-sm font-medium">
+                      {
+                        line.product_name
+                      }
+                    </p>
 
-                  <p className="mt-1 text-xs text-neutral-500">
-                    {line.sku}
-                  </p>
 
-                  <p className="mt-1 text-xs text-neutral-500">
-                    Qty {line.quantity}
+                    <p className="mt-1 text-xs text-neutral-500">
+                      {line.sku}
+                    </p>
+
+
+                    <p className="mt-1 text-xs text-neutral-500">
+                      Qty{" "}
+                      {line.quantity}
+                    </p>
+
+                  </div>
+
+
+                  <p className="whitespace-nowrap text-sm">
+                    {formatKRW(
+                      line.line_total
+                    )}
                   </p>
 
                 </div>
 
-
-                <p className="whitespace-nowrap text-sm">
-                  {formatKRW(
-                    line.line_total
-                  )}
-                </p>
-
-              </div>
-
-            ))}
+              )
+            )}
 
           </div>
 
@@ -469,6 +548,7 @@ export default function CheckoutSuccessPage() {
               <span>
                 Subtotal
               </span>
+
 
               <span>
                 {formatKRW(
@@ -489,6 +569,7 @@ export default function CheckoutSuccessPage() {
                   Discount
                 </span>
 
+
                 <span>
                   -
                   {formatKRW(
@@ -506,6 +587,7 @@ export default function CheckoutSuccessPage() {
               <span>
                 Shipping
               </span>
+
 
               <span>
                 {Number(
@@ -530,6 +612,7 @@ export default function CheckoutSuccessPage() {
                   Tax
                 </span>
 
+
                 <span>
                   {formatKRW(
                     order.tax_amount
@@ -546,6 +629,7 @@ export default function CheckoutSuccessPage() {
               <span className="font-medium">
                 Total
               </span>
+
 
               <span className="text-xl font-medium">
                 {formatKRW(
@@ -569,33 +653,57 @@ export default function CheckoutSuccessPage() {
               Shipping address
             </h2>
 
+
             <div className="mt-4 text-sm leading-6 text-neutral-600">
 
               <p>
-                {shippingAddress.recipient_name}
+                {
+                  shippingAddress.recipient_name
+                }
               </p>
+
 
               <p>
-                {shippingAddress.address_line1}
+                {
+                  shippingAddress.address_line1
+                }
               </p>
 
-              {shippingAddress.address_line2 && (
-                <p>
-                  {shippingAddress.address_line2}
-                </p>
-              )}
+
+              {
+                shippingAddress.address_line2 &&
+                (
+                  <p>
+                    {
+                      shippingAddress.address_line2
+                    }
+                  </p>
+                )
+              }
+
 
               <p>
-                {shippingAddress.district},{" "}
-                {shippingAddress.city}
+                {
+                  shippingAddress.district
+                }
+                ,{" "}
+                {
+                  shippingAddress.city
+                }
               </p>
 
+
               <p>
-                {shippingAddress.postal_code}
+                {
+                  shippingAddress.postal_code
+                }
               </p>
+
 
               <p className="mt-2">
-                {shippingAddress.phone_number}
+                {
+                  shippingAddress.phone_number
+                }
               </p>
 
             </div>
@@ -612,7 +720,13 @@ export default function CheckoutSuccessPage() {
 
             <Link
               href="/"
-              className="bg-black px-8 py-4 text-sm font-medium tracking-wider text-white transition-opacity hover:opacity-80"
+              className="inline-flex items-center justify-center px-8 py-4 text-sm font-medium tracking-wider transition-opacity hover:opacity-80"
+              style={{
+                backgroundColor:
+                  "#111111",
+                color:
+                  "#ffffff",
+              }}
             >
               CONTINUE SHOPPING
             </Link>
@@ -627,11 +741,32 @@ export default function CheckoutSuccessPage() {
       <footer className="px-8 pb-8 pt-16 md:px-14">
 
         <div className="border-t border-neutral-200 pt-5 text-xs text-neutral-500">
-          © {new Date().getFullYear()} SUSI
+          ©{" "}
+          {new Date().getFullYear()}{" "}
+          SUSI
         </div>
 
       </footer>
 
     </main>
+  );
+}
+
+
+export default function CheckoutSuccessPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center bg-white text-black">
+
+          <p className="text-sm text-neutral-500">
+            Loading order...
+          </p>
+
+        </main>
+      }
+    >
+      <CheckoutSuccessPageContent />
+    </Suspense>
   );
 }

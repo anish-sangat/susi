@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import * as PortOne from "@portone/browser-sdk/v2";
 
 
@@ -10,8 +10,10 @@ const API_URL =
   process.env.NEXT_PUBLIC_API_URL ??
   "http://127.0.0.1:8000";
 
+
 const PORTONE_STORE_ID =
   process.env.NEXT_PUBLIC_PORTONE_STORE_ID;
+
 
 const PORTONE_CHANNEL_KEY =
   process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY;
@@ -85,20 +87,28 @@ type PaymentVerifyResponse = {
 };
 
 
-function formatKRW(value: number | string) {
-  return new Intl.NumberFormat("ko-KR", {
-    style: "currency",
-    currency: "KRW",
-    maximumFractionDigits: 0,
-  }).format(Number(value));
+function formatKRW(
+  value: number | string
+) {
+  return new Intl.NumberFormat(
+    "ko-KR",
+    {
+      style: "currency",
+      currency: "KRW",
+      maximumFractionDigits: 0,
+    }
+  ).format(Number(value));
 }
 
 
-export default function PaymentPage() {
+function PaymentPageContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const searchParams =
+    useSearchParams();
 
-  const orderId = searchParams.get("order");
+  const orderId =
+    searchParams.get("order");
+
 
   const [order, setOrder] =
     useState<Order | null>(null);
@@ -112,10 +122,6 @@ export default function PaymentPage() {
   const [error, setError] =
     useState("");
 
-
-  // -------------------------------------------------------
-  // AUTHENTICATED REQUEST
-  // -------------------------------------------------------
 
   async function authenticatedFetch(
     path: string,
@@ -131,29 +137,32 @@ export default function PaymentPage() {
       return null;
     }
 
-    const response = await fetch(
-      `${API_URL}${path}`,
-      {
-        ...options,
+    const response =
+      await fetch(
+        `${API_URL}${path}`,
+        {
+          ...options,
 
-        headers: {
-          ...(options.body
-            ? {
-                "Content-Type":
-                  "application/json",
-              }
-            : {}),
+          headers: {
+            ...(options.body
+              ? {
+                  "Content-Type":
+                    "application/json",
+                }
+              : {}),
 
-          Authorization:
-            `Bearer ${token}`,
+            Authorization:
+              `Bearer ${token}`,
 
-          ...options.headers,
-        },
-      }
-    );
+            ...options.headers,
+          },
+        }
+      );
 
 
-    if (response.status === 401) {
+    if (
+      response.status === 401
+    ) {
       sessionStorage.removeItem(
         "susi_access_token"
       );
@@ -167,10 +176,6 @@ export default function PaymentPage() {
   }
 
 
-  // -------------------------------------------------------
-  // LOAD ORDER
-  // -------------------------------------------------------
-
   useEffect(() => {
     async function loadOrder() {
       if (!orderId) {
@@ -182,10 +187,12 @@ export default function PaymentPage() {
         return;
       }
 
+
       const token =
         sessionStorage.getItem(
           "susi_access_token"
         );
+
 
       if (!token) {
         router.push("/login");
@@ -194,23 +201,27 @@ export default function PaymentPage() {
 
 
       try {
-        const response = await fetch(
-          `${API_URL}/orders/${orderId}`,
-          {
-            headers: {
-              Authorization:
-                `Bearer ${token}`,
-            },
-          }
-        );
+        const response =
+          await fetch(
+            `${API_URL}/orders/${orderId}`,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
 
 
-        if (response.status === 401) {
+        if (
+          response.status === 401
+        ) {
           sessionStorage.removeItem(
             "susi_access_token"
           );
 
           router.push("/login");
+
           return;
         }
 
@@ -239,8 +250,12 @@ export default function PaymentPage() {
 
       } catch (err) {
 
-        if (err instanceof Error) {
-          setError(err.message);
+        if (
+          err instanceof Error
+        ) {
+          setError(
+            err.message
+          );
         } else {
           setError(
             "Unable to load order."
@@ -258,12 +273,11 @@ export default function PaymentPage() {
   }, [orderId, router]);
 
 
-  // -------------------------------------------------------
-  // START PAYMENT
-  // -------------------------------------------------------
-
   async function handlePayment() {
-    if (!order || !orderId) {
+    if (
+      !order ||
+      !orderId
+    ) {
       return;
     }
 
@@ -280,7 +294,9 @@ export default function PaymentPage() {
     }
 
 
-    if (order.status_id !== 1) {
+    if (
+      order.status_id !== 1
+    ) {
       setError(
         "This order is no longer awaiting payment."
       );
@@ -294,10 +310,6 @@ export default function PaymentPage() {
 
 
     try {
-
-      // ---------------------------------------------------
-      // 1. CREATE PAYMENT RECORD ON SUSI BACKEND
-      // ---------------------------------------------------
 
       const createResponse =
         await authenticatedFetch(
@@ -339,10 +351,6 @@ export default function PaymentPage() {
         createData;
 
 
-      // ---------------------------------------------------
-      // 2. OPEN PORTONE V2 / TOSS PAYMENTS
-      // ---------------------------------------------------
-
       const paymentResponse =
         await PortOne.requestPayment({
           storeId:
@@ -361,7 +369,9 @@ export default function PaymentPage() {
               : `SUSI Order - ${order.lines.length} items`,
 
           totalAmount:
-            Number(order.total_amount),
+            Number(
+              order.total_amount
+            ),
 
           currency: "KRW",
 
@@ -388,10 +398,6 @@ export default function PaymentPage() {
         });
 
 
-      // ---------------------------------------------------
-      // 3. PORTONE SDK RESPONSE CHECK
-      // ---------------------------------------------------
-
       if (!paymentResponse) {
         throw new Error(
           "No response was received from PortOne."
@@ -399,26 +405,15 @@ export default function PaymentPage() {
       }
 
 
-      if (paymentResponse.code) {
-
+      if (
+        paymentResponse.code
+      ) {
         throw new Error(
           paymentResponse.message ??
             "Payment was not completed."
         );
       }
 
-
-      // ---------------------------------------------------
-      // 4. VERIFY PAYMENT WITH FASTAPI
-      // ---------------------------------------------------
-      //
-      // IMPORTANT:
-      // We do NOT trust the browser to say the payment
-      // succeeded.
-      //
-      // FastAPI contacts PortOne using the backend API
-      // secret and checks the authoritative payment.
-      // ---------------------------------------------------
 
       const verifyResponse =
         await authenticatedFetch(
@@ -465,10 +460,6 @@ export default function PaymentPage() {
         verifyData;
 
 
-      // ---------------------------------------------------
-      // 5. CHECK BACKEND RESULT
-      // ---------------------------------------------------
-
       if (
         verifiedPayment.status !==
         "paid"
@@ -479,10 +470,6 @@ export default function PaymentPage() {
       }
 
 
-      // ---------------------------------------------------
-      // 6. SUCCESS
-      // ---------------------------------------------------
-
       router.push(
         `/checkout/success?order=${encodeURIComponent(
           order.id
@@ -492,8 +479,12 @@ export default function PaymentPage() {
 
     } catch (err) {
 
-      if (err instanceof Error) {
-        setError(err.message);
+      if (
+        err instanceof Error
+      ) {
+        setError(
+          err.message
+        );
       } else {
         setError(
           "Payment could not be completed."
@@ -505,10 +496,6 @@ export default function PaymentPage() {
     }
   }
 
-
-  // -------------------------------------------------------
-  // LOADING
-  // -------------------------------------------------------
 
   if (loading) {
     return (
@@ -522,10 +509,6 @@ export default function PaymentPage() {
     );
   }
 
-
-  // -------------------------------------------------------
-  // ERROR WITHOUT ORDER
-  // -------------------------------------------------------
 
   if (!order) {
     return (
@@ -570,14 +553,9 @@ export default function PaymentPage() {
   }
 
 
-  // -------------------------------------------------------
-  // PAGE
-  // -------------------------------------------------------
-
   return (
     <main className="min-h-screen bg-white text-black">
 
-      {/* HEADER */}
       <header className="flex items-center justify-between px-6 py-6 md:px-14">
 
         <Link
@@ -613,7 +591,6 @@ export default function PaymentPage() {
         </p>
 
 
-        {/* ERROR */}
         {error && (
 
           <div className="mt-8 border border-red-200 bg-red-50 px-5 py-4">
@@ -627,7 +604,6 @@ export default function PaymentPage() {
         )}
 
 
-        {/* ORDER */}
         <div className="mt-10 border border-neutral-200 p-6 md:p-8">
 
           <div className="flex items-center justify-between border-b border-neutral-200 pb-5">
@@ -652,7 +628,6 @@ export default function PaymentPage() {
           </div>
 
 
-          {/* ITEMS */}
           <div className="divide-y divide-neutral-200">
 
             {order.lines.map(
@@ -666,9 +641,7 @@ export default function PaymentPage() {
                   <div>
 
                     <p className="text-sm font-medium">
-                      {
-                        line.product_name
-                      }
+                      {line.product_name}
                     </p>
 
                     <p className="mt-1 text-xs text-neutral-500">
@@ -697,7 +670,6 @@ export default function PaymentPage() {
           </div>
 
 
-          {/* TOTALS */}
           <div className="border-t border-neutral-200 pt-5">
 
             <div className="flex justify-between text-sm">
@@ -794,7 +766,6 @@ export default function PaymentPage() {
           </div>
 
 
-          {/* PAYMENT BUTTON */}
           <button
             type="button"
             onClick={
@@ -822,7 +793,6 @@ export default function PaymentPage() {
         </div>
 
 
-        {/* RESERVATION */}
         {order.reservation_expires_at && (
 
           <p className="mt-5 text-center text-xs text-neutral-500">
@@ -836,5 +806,24 @@ export default function PaymentPage() {
       </section>
 
     </main>
+  );
+}
+
+
+export default function PaymentPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center bg-white text-black">
+
+          <p className="text-sm text-neutral-500">
+            Loading payment...
+          </p>
+
+        </main>
+      }
+    >
+      <PaymentPageContent />
+    </Suspense>
   );
 }

@@ -11,4 +11,4 @@ pydantic[email]
 httpx
 standardwebhooks
 portone-server-sdk
-Add-Content requirements.txt "python-multipart"
+python-multipart
